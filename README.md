@@ -59,7 +59,7 @@
 
 ## 感谢
 
-感谢原作者的贡献，非常棒的一个插件！
+感谢原作者的贡献，希望能帮助到你！
 
 | [<img src="https://avatars3.githubusercontent.com/u/1530997?s=400&v=4" width="60px;"/><br /><sub>Edgardmessias</sub>](https://github.com/edgardmessias) | 
 |-|

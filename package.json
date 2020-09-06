@@ -2,7 +2,7 @@
     "publisher": "Wscats",
     "name": "clipboard",
     "displayName": "Clipboard",
-    "description": "Clipboard",
+    "description": "📚粘贴板管理",
     "version": "1.0.1",
     "author": {
         "name": "Eno Yao",
@@ -10,7 +10,10 @@
         "url": "https://github.com/Wscats"
     },
     "icon": "media/clipboard.jpg",
-    "extensionKind": "ui",
+    "galleryBanner": {
+        "color": "#58bc58",
+        "theme": "dark"
+    },
     "engines": {
         "vscode": "^1.26.0"
     },
@@ -28,9 +31,8 @@
     "keywords": [
         "clipboard",
         "copy",
-        "ditto",
-        "history",
-        "paste"
+        "paste",
+        "history"
     ],
     "activationEvents": [
         "*"
