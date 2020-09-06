@@ -1,0 +1,15 @@
+.*
+.**
+.**/**
+*.vsix
+bin/**
+coverage/**
+coverconfig.json
+out/**/*.map
+out/test/**
+out/tools/**
+package-lock.json
+screenshots/**
+src/**
+test-reports/**
+tsconfig.json

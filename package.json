@@ -1,0 +1,276 @@
+{
+    "publisher": "Wscats",
+    "name": "clipboard",
+    "displayName": "Clipboard",
+    "description": "Clipboard",
+    "version": "1.0.1",
+    "author": {
+        "name": "Eno Yao",
+        "email": "kalone.cool@gmail.com",
+        "url": "https://github.com/Wscats"
+    },
+    "icon": "media/clipboard.jpg",
+    "extensionKind": "ui",
+    "engines": {
+        "vscode": "^1.26.0"
+    },
+    "bugs": {
+        "url": "https://github.com/Wscats/vscode-clipboard/issues/new"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Wscats/vscode-clipboard.git"
+    },
+    "homepage": "https://github.com/Wscats/vscode-clipboard",
+    "categories": [
+        "Other"
+    ],
+    "keywords": [
+        "clipboard",
+        "copy",
+        "ditto",
+        "history",
+        "paste"
+    ],
+    "activationEvents": [
+        "*"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "clipboard-manager",
+                    "title": "Clipboard Manager",
+                    "icon": "media/clipboard.svg"
+                }
+            ]
+        },
+        "views": {
+            "clipboard-manager": [
+                {
+                    "id": "clipboardHistory",
+                    "name": "Clipboard History"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "clipboard-manager.editor.copyToHistory",
+                "title": "Copy to Clipboard History",
+                "category": "Clipboard Manager"
+            },
+            {
+                "command": "clipboard-manager.editor.pickAndPaste",
+                "title": "Pick and Paste",
+                "category": "Clipboard Manager"
+            },
+            {
+                "command": "clipboard-manager.editor.showClipboardInFile",
+                "title": "Show in the file",
+                "category": "Clipboard Manager"
+            },
+            {
+                "command": "clipboard-manager.history.clear",
+                "title": "Clear History",
+                "category": "Clipboard Manager",
+                "icon": {
+                    "dark": "resources/dark/clear-history.svg",
+                    "light": "resources/light/clear-history.svg"
+                }
+            },
+            {
+                "command": "clipboard-manager.history.remove",
+                "title": "Remove",
+                "category": "Clipboard Manager",
+                "icon": {
+                    "dark": "resources/dark/remove.svg",
+                    "light": "resources/light/remove.svg"
+                }
+            }
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "clipboard-manager.editor.pickAndPaste",
+                    "when": "editorFocus && !editorReadonly"
+                },
+                {
+                    "command": "clipboard-manager.editor.showClipboardInFile",
+                    "when": "false"
+                },
+                {
+                    "command": "clipboard-manager.history.clear"
+                },
+                {
+                    "command": "clipboard-manager.history.remove",
+                    "when": "false"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "clipboard-manager.editor.showClipboardInFile",
+                    "when": "viewItem =~ /^clipHistoryItem:file/",
+                    "group": "0_navigation"
+                },
+                {
+                    "command": "clipboard-manager.history.remove",
+                    "when": "viewItem =~ /^clipHistoryItem:/",
+                    "group": "1_modification"
+                },
+                {
+                    "command": "clipboard-manager.history.remove",
+                    "when": "viewItem =~ /^clipHistoryItem:/",
+                    "group": "inline"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "clipboard-manager.history.clear",
+                    "when": "view == clipboardHistory",
+                    "group": "navigation"
+                }
+            ]
+        },
+        "keybindings": [
+            {
+                "command": "clipboard-manager.editor.copyToHistory",
+                "key": "Ctrl+Shift+C",
+                "mac": "Cmd+Shift+C",
+                "when": "textInputFocus && !editorReadonly"
+            },
+            {
+                "command": "clipboard-manager.editor.pickAndPaste",
+                "key": "Ctrl+Shift+V",
+                "mac": "Cmd+Shift+V",
+                "when": "textInputFocus && !editorReadonly"
+            }
+        ],
+        "configuration": [
+            {
+                "title": "Clipboard Manager",
+                "properties": {
+                    "clipboard-manager.avoidDuplicates": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Avoid duplicate clips in the list"
+                    },
+                    "clipboard-manager.checkInterval": {
+                        "type": "integer",
+                        "default": 500,
+                        "description": "Time in milliseconds to check changes in clipboard. Set zero to disable."
+                    },
+                    "clipboard-manager.maxClipboardSize": {
+                        "type": "integer",
+                        "default": 1000000,
+                        "description": "Maximum clipboard size in bytes."
+                    },
+                    "clipboard-manager.maxClips": {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum number of clips to save in clipboard"
+                    },
+                    "clipboard-manager.moveToTop": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Move used clip to top in the list"
+                    },
+                    "clipboard-manager.onlyWindowFocused": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Get clips only from VSCode"
+                    },
+                    "clipboard-manager.preview": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "View a preview while you are choosing the clip"
+                    },
+                    "clipboard-manager.saveTo": {
+                        "type": [
+                            "string",
+                            "null",
+                            "boolean"
+                        ],
+                        "default": null,
+                        "description": "Set location to save the clipboard file, set false to disable",
+                        "scope": "application"
+                    },
+                    "clipboard-manager.snippet.enabled": {
+                        "scope": "resource",
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Enable completion snippets"
+                    },
+                    "clipboard-manager.snippet.max": {
+                        "scope": "resource",
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Maximum number of clips to suggests in snippets (Zero for all)"
+                    },
+                    "clipboard-manager.snippet.prefix": {
+                        "scope": "resource",
+                        "type": "string",
+                        "default": "clip",
+                        "description": "Default prefix for snippets completion (clip1, clip2, ...)"
+                    }
+                }
+            }
+        ]
+    },
+    "scripts": {
+        "build": "vsce package",
+        "changelog:last": "conventional-changelog -p angular -r 2",
+        "changelog:preview": "conventional-changelog -p angular -u",
+        "changelog:update": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
+        "clean": "rimraf ./out ./coverage ./test-reports",
+        "compile": "tsc -p ./",
+        "lint": "eslint -c .eslintrc.js --ext .ts src",
+        "organize": "node ./out/tools/organize.js",
+        "release": "release-it",
+        "test": "npm run compile && node ./out/test/runTests.js",
+        "vscode:prepublish": "npm run clean && npm run compile",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/clipboardy": "^2.0.1",
+        "@types/glob": "^7.1.3",
+        "@types/istanbul-lib-coverage": "^2.0.3",
+        "@types/istanbul-lib-hook": "^2.0.1",
+        "@types/istanbul-lib-instrument": "^1.7.4",
+        "@types/istanbul-lib-report": "^3.0.0",
+        "@types/istanbul-lib-source-maps": "^4.0.1",
+        "@types/istanbul-reports": "^3.0.0",
+        "@types/mocha": "^8.0.3",
+        "@types/node": "~8.10.59",
+        "@types/sinon": "^9.0.5",
+        "@types/vscode": "1.26.0",
+        "@typescript-eslint/eslint-plugin": "^2.34.0",
+        "@typescript-eslint/parser": "^2.34.0",
+        "conventional-changelog-cli": "^2.1.0",
+        "decache": "^4.6.0",
+        "eslint": "^6.8.0",
+        "eslint-config-prettier": "^6.11.0",
+        "eslint-plugin-prettier": "^3.1.4",
+        "glob": "^7.1.6",
+        "istanbul-lib-coverage": "^3.0.0",
+        "istanbul-lib-hook": "^3.0.0",
+        "istanbul-lib-instrument": "^4.0.3",
+        "istanbul-lib-report": "^3.0.0",
+        "istanbul-lib-source-maps": "^4.0.0",
+        "istanbul-reports": "^3.0.2",
+        "mocha": "^8.1.3",
+        "mocha-github-actions-reporter": "^0.2.1",
+        "mocha-multi-reporters": "^1.1.7",
+        "original-fs": "^1.1.0",
+        "prettier": "^2.1.1",
+        "release-it": "^14.0.2",
+        "rimraf": "^3.0.2",
+        "sinon": "^9.0.3",
+        "source-map-support": "^0.5.19",
+        "typescript": "^4.0.2",
+        "vscode-test": "^1.4.0"
+    },
+    "dependencies": {
+        "clipboardy": "^2.3.0"
+    }
+}
