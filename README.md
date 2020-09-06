@@ -1,75 +1,65 @@
-# Clipboard
+# 粘贴板管理
 
-Keep a history of your copied and cut items and re-paste, without override the `Ctrl+C` and `Ctrl+V` keyboard shortcuts.
+保留项目的复制和剪切，并在可在面板的历史记录中重新选择粘贴，而不必再重复使用 `Ctrl + C` 和 `Ctrl + V` 的快捷键。
 
-To pick a copied item, only run `Ctrl+Shift+V`
+要选择复制的内容，只需使用 `Ctrl+Shift+V` 快捷键。
 
-## Features
+## 特性
 
-1. Save history of all copied and cut items
-1. Can check copied items outside the VSCode (`"clipboard-manager.onlyWindowFocused": false`)
-1. Paste from history (`Ctrl+Shift+V` => Pick and Paste)
-1. Preview the paste
-1. Snippets to paste (Ex. `clip01, clip02, ...`)
-1. Remove selected item from history
-1. Clear all history
-1. Open copy location
-1. Double click in history view to paste
+1. 保存所有复制和剪切内容的历史记录
+1. 可以检查 VSCode 之外的复制内容(`"clipboard-manager.onlyWindowFocused": false`)
+1. 从历史记录中粘贴 (`Ctrl+Shift+V` => 选择并粘贴)
+1. 预览粘贴的内容
+1. 使用复制片段粘贴 (例如： `clip01, clip02, ...`)
+1. 从历史记录中删除所选内容
+1. 清除所有历史记录
+1. 打开历史记录的位置
+1. 在历史记录面板中双击来粘贴
 
-## Extension Settings
+## 插件设置
 
-This extension contributes the following settings (default values):
+该插件提供以下设置（默认值）:
 
-<!--begin-settings-->
 ```js
 {
-  // Avoid duplicate clips in the list
+  // 避免列表中出现重复的内容。
   "clipboard-manager.avoidDuplicates": true,
-
-  // Time in milliseconds to check changes in clipboard. Set zero to disable.
+  // 检查剪贴板中更改的时间（以毫秒为单位），设置为零以禁用。
   "clipboard-manager.checkInterval": 500,
-
-  // Maximum clipboard size in bytes.
+  // 剪贴板的最大大小（以字节为单位）。
   "clipboard-manager.maxClipboardSize": 1000000,
-
-  // Maximum number of clips to save in clipboard
+  // 要保存在剪贴板中的最大片段数。
   "clipboard-manager.maxClips": 100,
-
-  // Move used clip to top in the list
+  // 将使用过的剪辑移到列表顶部。
   "clipboard-manager.moveToTop": true,
-
-  // Get clips only from VSCode
+  // 仅从 VSCode 获取复制内容。
   "clipboard-manager.onlyWindowFocused": true,
-
-  // View a preview while you are choosing the clip
+  // 选择复制时时查看并预览。
   "clipboard-manager.preview": true,
-
-  // Set location to save the clipboard file, set false to disable
+  // 设置保存剪贴板文件的位置，设置为 false 禁用。
   "clipboard-manager.saveTo": null,
-
-  // Enable completion snippets
+  // 启用完成的片段
   "clipboard-manager.snippet.enabled": true,
-
-  // Maximum number of clips to suggests in snippets (Zero for all)
+  // 片段中建议的最大片段数（全部为零）。
   "clipboard-manager.snippet.max": 10,
-
-  // Default prefix for snippets completion (clip1, clip2, ...)
+  // 代码段完成的默认前缀（clip1，clip2等）
   "clipboard-manager.snippet.prefix": "clip"
 }
 ```
-<!--end-settings-->
 
-## Examples
+## 示例
 
-Copy to history:
+复制到历史记录:
 
 ![Clipboard Manager - Copy](screenshots/copy.gif)
 
-Pick and Paste:
+选择并粘贴:
 
 ![Clipboard Manager - Pick and Paste](screenshots/pick-and-paste.gif)
 
-## Thanks to EdgardMessias for the original extension
+## 感谢
+
+感谢原作者的贡献，非常棒的一个插件！
 
 | [<img src="https://avatars3.githubusercontent.com/u/1530997?s=400&v=4" width="60px;"/><br /><sub>Edgardmessias</sub>](https://github.com/edgardmessias) | 
 |-|
