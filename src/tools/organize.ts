@@ -2,22 +2,22 @@ import * as fs from "fs";
 import * as path from "path";
 
 interface IPackage {
-  [key: string]: any;
+  [key: string]: unknown;
   contributes: {
-    [key: string]: any;
+    [key: string]: unknown;
     commands: Array<{
       command: string;
     }>;
     configuration: Array<{
       title: string;
       properties: {
-        [key: string]: any;
+        [key: string]: unknown;
       };
     }>;
   };
 }
 
-function sortObjectKeys(obj: { [key: string]: any }) {
+function sortObjectKeys(obj: { [key: string]: unknown }) {
   const clone = Object.assign({}, obj);
 
   for (const key of Object.keys(clone).sort()) {
@@ -44,7 +44,7 @@ let packageJson = fs.readFileSync(packageFile, { encoding: "utf8" });
 
 const packageData = JSON.parse(packageJson) as IPackage;
 
-const sortByCommand = (a: any, b: any) => a.command.localeCompare(b.command);
+const sortByCommand = (a: unknown, b: unknown) => a.command.localeCompare(b.command);
 
 packageData.contributes.commands.sort(sortByCommand);
 packageData.contributes.menus.commandPalette.sort(sortByCommand);

@@ -433,7 +433,7 @@ declare module 'vscode' {
        * @param thisArg The `this` context used when invoking the handler function.
        * @return Disposable which unregisters this command on disposal.
        */
-      export function registerDiffInformationCommand(command: string, callback: (diff: LineChange[], ...args: any[]) => any, thisArg ? : any): Disposable;
+      export function registerDiffInformationCommand(command: string, callback: (diff: LineChange[], ...args: unknown[]) => any, thisArg ? : unknown): Disposable;
   }
   //#endregion
   //#region Joh: decorations
@@ -517,12 +517,12 @@ declare module 'vscode' {
    */
   export class DebugAdapterImplementation {
       readonly type: 'implementation';
-      readonly implementation: any;
+      readonly implementation: unknown;
       /**
        * Create a description for a debug adapter directly implemented in the extension.
        * The implementation's "type": TBD
        */
-      constructor(implementation: any);
+      constructor(implementation: unknown);
   }
   export type DebugAdapterDescriptor = DebugAdapterExecutable | DebugAdapterServer | DebugAdapterImplementation;
   /**
@@ -531,10 +531,10 @@ declare module 'vscode' {
   export interface DebugAdapterTracker {
       // VS Code -> Debug Adapter
       startDebugAdapter ? () : void;
-      toDebugAdapter ? (message: any) : void;
+      toDebugAdapter ? (message: unknown) : void;
       stopDebugAdapter ? () : void;
       // Debug Adapter -> VS Code
-      fromDebugAdapter ? (message: any) : void;
+      fromDebugAdapter ? (message: unknown) : void;
       debugAdapterError ? (error: Error) : void;
       debugAdapterExit ? (code ? : number, signal ? : string) : void;
   }

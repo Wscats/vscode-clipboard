@@ -17,7 +17,7 @@ import * as paths from "path";
 // tslint:disable-next-line:no-var-requires
 
 declare let global: {
-  [key: string]: any; // missing index defintion
+  [key: string]: unknown; // missing index defintion
 };
 
 // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY
@@ -35,9 +35,9 @@ let mocha = new Mocha({
   color: true,
 });
 
-let testOptions: any;
+let testOptions: unknown;
 
-export function configure(mochaOpts: Mocha.MochaOptions, testOpts: any): void {
+export function configure(mochaOpts: Mocha.MochaOptions, testOpts: unknown): void {
   mocha = new Mocha(mochaOpts);
   testOptions = testOpts;
 }
@@ -60,7 +60,7 @@ function _readCoverOptions(testsRoot: string): ITestRunnerOptions | undefined {
   return coverConfig;
 }
 
-export function run(testsRoot: string, clb: Function): any {
+export function run(testsRoot: string, clb: Function): unknown {
   // Enable source map support
   require("source-map-support").install();
 
@@ -77,7 +77,7 @@ export function run(testsRoot: string, clb: Function): any {
   }
 
   // Glob test files
-  glob("**/**.test.js", { cwd: testsRoot }, function (error, files): any {
+  glob("**/**.test.js", { cwd: testsRoot }, function (error, files): unknown {
     if (error) {
       return clb(error);
     }
@@ -118,7 +118,7 @@ interface ITestRunnerOptions {
 class CoverageRunner {
   private coverageVar: string = "$$cov_" + new Date().getTime() + "$$";
   private transformer!: istanbulHook.Transformer;
-  private matchFn: any = undefined;
+  private matchFn: unknown = undefined;
   private instrumenter!: istanbulInstrument.Instrumenter;
   private unhookRequire!: Function;
 
@@ -155,7 +155,7 @@ class CoverageRunner {
     // Create a match function - taken from the run-with-cover.js in istanbul.
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const decache = require("decache");
-    const fileMap: { [key: string]: any } = {};
+    const fileMap: { [key: string]: unknown } = {};
     srcFiles.forEach(file => {
       const fullPath = paths.join(sourceRoot, file);
       fileMap[fullPath] = true;
@@ -201,7 +201,7 @@ class CoverageRunner {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     self.unhookRequire();
-    let cov: any;
+    let cov: unknown;
     if (
       typeof global[self.coverageVar] === "undefined" ||
       Object.keys(global[self.coverageVar]).length === 0

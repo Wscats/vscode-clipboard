@@ -18,7 +18,7 @@ suite("Extension Tests", function () {
   test("Active Extension", async function () {
     const ext = vscode.extensions.getExtension(
       "EdgardMessias.clipboard-manager"
-    ) as vscode.Extension<any>;
+    ) as vscode.Extension<unknown>;
 
     assert.ok(ext, "Extension not found");
 

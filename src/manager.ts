@@ -167,7 +167,7 @@ export class ClipboardManager implements vscode.Disposable {
     return filePath;
   }
 
-  protected jsonReplacer(key: string, value: any) {
+  protected jsonReplacer(key: string, value: unknown) {
     if (key === "createdLocation" && value) {
       value = {
         range: {
@@ -261,14 +261,14 @@ export class ClipboardManager implements vscode.Disposable {
       }
     } else {
       // Read from old storage
-      json = this.context.globalState.get<any>("clips");
+      json = this.context.globalState.get<unknown>("clips");
     }
 
     if (!json) {
       return;
     }
 
-    let stored: any = {};
+    let stored: unknown = {};
 
     try {
       stored = JSON.parse(json);

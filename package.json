@@ -15,7 +15,8 @@
     "theme": "dark"
   },
   "engines": {
-    "vscode": "^1.26.0"
+    "vscode": "^1.26.0",
+    "node": ">=18.0.0"
   },
   "bugs": {
     "url": "https://github.com/Wscats/vscode-clipboard/issues/new"
@@ -232,7 +233,10 @@
     "test": "npm run compile && node ./out/test/runTests.js",
     "vscode:prepublish": "npm run clean && npm run compile",
     "watch": "tsc -watch -p ./",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint:check": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@types/clipboardy": "^2.0.1",
@@ -275,5 +279,6 @@
   },
   "dependencies": {
     "clipboardy": "^2.3.0"
-  }
+  },
+  "license": "MIT"
 }
