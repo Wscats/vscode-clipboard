@@ -1,7 +1,15 @@
-import * as vscode from "vscode";
-import { commandList } from "./common";
-import { Monitor } from "../monitor";
+/**
+ * Clipboard Manager - Copy to History command.
+ * Copies the current selection and adds it to clipboard history.
+ *
+ * @author Eno Yao
+ */
 
+import * as vscode from "vscode";
+import { Monitor } from "../monitor";
+import { commandList } from "./common";
+
+/** Command that copies the current selection and triggers clipboard monitoring. */
 export class CopyToHistoryCommand implements vscode.Disposable {
   private _disposable: vscode.Disposable[] = [];
 
@@ -15,12 +23,14 @@ export class CopyToHistoryCommand implements vscode.Disposable {
     );
   }
 
-  protected async execute() {
+  protected async execute(): Promise<void> {
     await vscode.commands.executeCommand("editor.action.clipboardCopyAction");
     await this.monitor.checkChangeText();
   }
 
-  public dispose() {
-    this._disposable.forEach(d => d.dispose());
+  public dispose(): void {
+    for (const d of this._disposable) {
+      d.dispose();
+    }
   }
 }

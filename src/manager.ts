@@ -1,8 +1,16 @@
+/**
+ * Clipboard Manager - Clipboard history management.
+ * Stores, persists, and manages clipboard history items.
+ *
+ * @author Eno Yao
+ */
+
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { IClipboardTextChange, Monitor } from "./monitor";
+import { getErrorMessage } from "./util";
 
 export interface IClipboardItem {
   value: string;
@@ -14,19 +22,49 @@ export interface IClipboardItem {
   createdLocation?: vscode.Location;
 }
 
+/** Shape of the persisted clipboard history JSON file. */
+interface ClipboardStore {
+  version: number;
+  clips: ClipboardStoreItem[];
+}
+
+/** Shape of a single clip in the persisted JSON. */
+interface ClipboardStoreItem {
+  value: string;
+  createdAt: number;
+  timestamp?: number; // v1 compat
+  copyCount: number;
+  useCount: number;
+  language?: string;
+  createdLocation?: {
+    uri: string;
+    range: {
+      start: { line: number; character: number };
+      end: { line: number; character: number };
+    };
+  };
+  location?: unknown; // v1 compat
+}
+
+/** Shape used in jsonReplacer for serializing vscode.Location. */
+interface SerializedLocation {
+  range: {
+    start: vscode.Position;
+    end: vscode.Position;
+  };
+  uri: string;
+}
+
 export class ClipboardManager implements vscode.Disposable {
   protected _disposable: vscode.Disposable[] = [];
 
   protected _clips: IClipboardItem[] = [];
-  get clips() {
+
+  get clips(): IClipboardItem[] {
     return this._clips;
   }
 
   protected lastUpdate: number = 0;
-
-  // get clipboard() {
-  //   return this._clipboard;
-  // }
 
   private _onDidClipListChange = new vscode.EventEmitter<void>();
   public readonly onDidChangeClipList = this._onDidClipListChange.event;
@@ -54,7 +92,8 @@ export class ClipboardManager implements vscode.Disposable {
     );
   }
 
-  protected updateClipList(change: IClipboardTextChange) {
+  /** Add a new clipboard change to the history list. */
+  protected updateClipList(change: IClipboardTextChange): void {
     this.checkClipsUpdate();
 
     const config = vscode.workspace.getConfiguration("clipboard-manager");
@@ -75,8 +114,11 @@ export class ClipboardManager implements vscode.Disposable {
 
       // Remove same clips and move recent to top
       if (index >= 0) {
-        this._clips[index].copyCount++;
-        item = this._clips[index];
+        const existing = this._clips[index];
+        if (existing) {
+          existing.copyCount++;
+          item = existing;
+        }
         this._clips = this._clips.filter(c => c.value !== change.value);
       }
     }
@@ -90,11 +132,11 @@ export class ClipboardManager implements vscode.Disposable {
     }
 
     this._onDidClipListChange.fire();
-
     this.saveClips();
   }
 
-  public async setClipboardValue(value: string) {
+  /** Set a clipboard value and optionally move it to the top. */
+  public async setClipboardValue(value: string): Promise<void> {
     this.checkClipsUpdate();
 
     const config = vscode.workspace.getConfiguration("clipboard-manager");
@@ -103,7 +145,10 @@ export class ClipboardManager implements vscode.Disposable {
     const index = this._clips.findIndex(c => c.value === value);
 
     if (index >= 0) {
-      this._clips[index].useCount++;
+      const clip = this._clips[index];
+      if (clip) {
+        clip.useCount++;
+      }
 
       if (moveToTop) {
         const clips = this.clips.splice(index, 1);
@@ -113,10 +158,11 @@ export class ClipboardManager implements vscode.Disposable {
       }
     }
 
-    return await this._monitor.clipboard.writeText(value);
+    await this._monitor.clipboard.writeText(value);
   }
 
-  public removeClipboardValue(value: string) {
+  /** Remove a specific value from clipboard history. */
+  public removeClipboardValue(value: string): boolean {
     this.checkClipsUpdate();
 
     const prevLength = this._clips.length;
@@ -128,7 +174,8 @@ export class ClipboardManager implements vscode.Disposable {
     return prevLength !== this._clips.length;
   }
 
-  public clearAll() {
+  /** Clear all clipboard history. */
+  public clearAll(): boolean {
     this.checkClipsUpdate();
 
     this._clips = [];
@@ -139,16 +186,19 @@ export class ClipboardManager implements vscode.Disposable {
   }
 
   /**
-   * `clipboard.history.json`
+   * Get the file path for persisting clipboard history.
+   * Returns `false` if persistence is disabled.
    */
-  protected getStoreFile() {
+  protected getStoreFile(): string | false {
     let folder = os.tmpdir();
 
     if (this.context.storagePath) {
       const parts = this.context.storagePath.split(
         /[\\/]workspaceStorage[\\/]/
       );
-      folder = parts[0];
+      if (parts[0]) {
+        folder = parts[0];
+      }
     }
 
     const filePath = path.join(folder, "clipboard.history.json");
@@ -167,23 +217,27 @@ export class ClipboardManager implements vscode.Disposable {
     return filePath;
   }
 
-  protected jsonReplacer(key: string, value: unknown) {
+  /** JSON replacer that serializes vscode.Location and vscode.Uri. */
+  protected jsonReplacer(key: string, value: unknown): unknown {
     if (key === "createdLocation" && value) {
-      value = {
+      const loc = value as vscode.Location;
+      const serialized: SerializedLocation = {
         range: {
-          start: value.range.start,
-          end: value.range.end,
+          start: loc.range.start,
+          end: loc.range.end,
         },
-        uri: value.uri.toString(),
+        uri: loc.uri.toString(),
       };
+      return serialized;
     } else if (value instanceof vscode.Uri) {
-      value = value.toString();
+      return value.toString();
     }
 
     return value;
   }
 
-  public saveClips() {
+  /** Persist the current clipboard history to disk. */
+  public saveClips(): void {
     const file = this.getStoreFile();
     if (!file) {
       return;
@@ -199,7 +253,7 @@ export class ClipboardManager implements vscode.Disposable {
         this.jsonReplacer,
         2
       );
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
       return;
     }
@@ -207,8 +261,9 @@ export class ClipboardManager implements vscode.Disposable {
     try {
       fs.writeFileSync(file, json);
       this.lastUpdate = fs.statSync(file).mtimeMs;
-    } catch (error) {
-      switch (error.code) {
+    } catch (error: unknown) {
+      const fsError = error as NodeJS.ErrnoException;
+      switch (fsError.code) {
         case "EPERM":
           vscode.window.showErrorMessage(
             `Not permitted to save clipboards on "${file}"`
@@ -225,10 +280,8 @@ export class ClipboardManager implements vscode.Disposable {
     }
   }
 
-  /**
-   * Check the clip history changed from another workspace
-   */
-  public checkClipsUpdate() {
+  /** Check if the clip history was changed from another workspace. */
+  public checkClipsUpdate(): void {
     const file = this.getStoreFile();
 
     if (!file) {
@@ -247,8 +300,9 @@ export class ClipboardManager implements vscode.Disposable {
     }
   }
 
-  public loadClips() {
-    let json;
+  /** Load clipboard history from disk or legacy global state. */
+  public loadClips(): void {
+    let json: string | Buffer | undefined;
 
     const file = this.getStoreFile();
 
@@ -256,23 +310,26 @@ export class ClipboardManager implements vscode.Disposable {
       try {
         json = fs.readFileSync(file);
         this.lastUpdate = fs.statSync(file).mtimeMs;
-      } catch (error) {
-        // ignore
+      } catch {
+        // Ignore read errors
       }
     } else {
       // Read from old storage
-      json = this.context.globalState.get<unknown>("clips");
+      const legacy = this.context.globalState.get<string>("clips");
+      if (legacy) {
+        json = legacy;
+      }
     }
 
     if (!json) {
       return;
     }
 
-    let stored: unknown = {};
+    let stored: ClipboardStore;
 
     try {
-      stored = JSON.parse(json);
-    } catch (error) {
+      stored = JSON.parse(String(json)) as ClipboardStore;
+    } catch (error: unknown) {
       console.log(error);
       return;
     }
@@ -281,17 +338,16 @@ export class ClipboardManager implements vscode.Disposable {
       return;
     }
 
-    let clips = stored.clips as any[];
+    let clips = stored.clips;
 
+    // Migrate v1 format to v2
     if (stored.version === 1) {
-      clips = clips.map(c => {
-        c.createdAt = c.timestamp;
-        c.copyCount = 1;
-        c.useCount = 0;
-        c.createdLocation = c.location;
-        return c;
-      });
-      stored.version = 2;
+      clips = clips.map(c => ({
+        ...c,
+        createdAt: c.timestamp ?? c.createdAt,
+        copyCount: c.copyCount || 1,
+        useCount: c.useCount || 0,
+      }));
     }
 
     this._clips = clips.map(c => {
@@ -299,7 +355,7 @@ export class ClipboardManager implements vscode.Disposable {
         value: c.value,
         createdAt: c.createdAt,
         copyCount: c.copyCount,
-        useCount: c.copyCount,
+        useCount: c.useCount,
         language: c.language,
       };
 
@@ -320,7 +376,9 @@ export class ClipboardManager implements vscode.Disposable {
     this._onDidClipListChange.fire();
   }
 
-  public dispose() {
-    this._disposable.forEach(d => d.dispose());
+  public dispose(): void {
+    for (const d of this._disposable) {
+      d.dispose();
+    }
   }
 }

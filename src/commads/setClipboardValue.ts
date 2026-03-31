@@ -1,7 +1,15 @@
+/**
+ * Clipboard Manager - Set Clipboard Value command.
+ * Updates the clipboard with a specified value.
+ *
+ * @author Eno Yao
+ */
+
 import * as vscode from "vscode";
 import { ClipboardManager } from "../manager";
 import { commandList } from "./common";
 
+/** Command that sets the clipboard to a specific value. */
 export class SetClipboardValueCommand implements vscode.Disposable {
   private _disposable: vscode.Disposable[] = [];
 
@@ -15,12 +23,13 @@ export class SetClipboardValueCommand implements vscode.Disposable {
     );
   }
 
-  protected async execute(value: string) {
-    // Update current clip in clipboard
+  protected async execute(value: string): Promise<void> {
     await this._manager.setClipboardValue(value);
   }
 
-  public dispose() {
-    this._disposable.forEach(d => d.dispose());
+  public dispose(): void {
+    for (const d of this._disposable) {
+      d.dispose();
+    }
   }
 }

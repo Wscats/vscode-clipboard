@@ -1,3 +1,10 @@
+/**
+ * Clipboard Manager - Command identifiers.
+ *
+ * @author Eno Yao
+ */
+
+/** Enum of all registered command identifiers for the Clipboard Manager extension. */
 export enum commandList {
   apiGetMonitor = "clipboard-manager.api.getMonitor",
   clearClipboardHistory = "clipboard-manager.history.clear",

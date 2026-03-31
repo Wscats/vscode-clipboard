@@ -4,8 +4,21 @@ import { IClipboardTextChange } from "../monitor";
 import { commandList } from "./common";
 
 /**
- * Command to paste from double click on history item
+ * Clipboard Manager - History Tree Double Click command.
+ * Emulates double-click behavior on tree view history items.
+ *
+ * @author Eno Yao
  */
+
+import * as vscode from "vscode";
+import { ClipboardManager } from "../manager";
+import { IClipboardTextChange } from "../monitor";
+import { commandList } from "./common";
+
+/** Double-click detection threshold in milliseconds. */
+const DOUBLE_CLICK_THRESHOLD_MS = 500;
+
+/** Command that pastes a clip on double-click in the history tree view. */
 export class HistoryTreeDoubleClickCommand implements vscode.Disposable {
   private _disposable: vscode.Disposable[] = [];
 
@@ -23,10 +36,10 @@ export class HistoryTreeDoubleClickCommand implements vscode.Disposable {
   }
 
   /**
-   * Emulate double click on tree view history
-   * @param clip
+   * Emulate double click on tree view history.
+   * First click records the clip; second click within threshold pastes it.
    */
-  protected async execute(clip: IClipboardTextChange) {
+  protected async execute(clip: IClipboardTextChange): Promise<void> {
     const now = Date.now();
     if (this.prevClip !== clip) {
       this.prevClip = clip;
@@ -37,7 +50,7 @@ export class HistoryTreeDoubleClickCommand implements vscode.Disposable {
     const diff = now - this.prevTime;
     this.prevTime = now;
 
-    if (diff > 500) {
+    if (diff > DOUBLE_CLICK_THRESHOLD_MS) {
       return;
     }
 
@@ -47,18 +60,20 @@ export class HistoryTreeDoubleClickCommand implements vscode.Disposable {
     // Update current clip in clipboard
     await this._manager.setClipboardValue(clip.value);
 
-    // Force to focus on editor to paste command works
+    // Force focus on editor so paste command works
     await vscode.commands.executeCommand(
       "workbench.action.focusActiveEditorGroup"
     );
 
     // Run default paste
-    return await vscode.commands.executeCommand(
+    await vscode.commands.executeCommand(
       "editor.action.clipboardPasteAction"
     );
   }
 
-  public dispose() {
-    this._disposable.forEach(d => d.dispose());
+  public dispose(): void {
+    for (const d of this._disposable) {
+      d.dispose();
+    }
   }
 }

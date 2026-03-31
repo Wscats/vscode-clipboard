@@ -1,7 +1,15 @@
+/**
+ * Clipboard Manager - API Get Monitor command.
+ * Exposes the clipboard monitor instance via a VS Code command API.
+ *
+ * @author Eno Yao
+ */
+
 import * as vscode from "vscode";
 import { Monitor } from "../monitor";
 import { commandList } from "./common";
 
+/** Command that returns the clipboard monitor instance (for API consumers). */
 export class ApiGetMonitor implements vscode.Disposable {
   private _disposable: vscode.Disposable[] = [];
 
@@ -15,11 +23,13 @@ export class ApiGetMonitor implements vscode.Disposable {
     );
   }
 
-  protected async execute() {
+  protected async execute(): Promise<Monitor> {
     return this.monitor;
   }
 
-  public dispose() {
-    this._disposable.forEach(d => d.dispose());
+  public dispose(): void {
+    for (const d of this._disposable) {
+      d.dispose();
+    }
   }
 }

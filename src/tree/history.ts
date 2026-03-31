@@ -1,9 +1,16 @@
+/**
+ * Clipboard Manager - Tree view data provider for clipboard history.
+ *
+ * @author Eno Yao
+ */
+
 import * as path from "path";
 import * as vscode from "vscode";
 import { commandList } from "../commads/common";
 import { ClipboardManager, IClipboardItem } from "../manager";
 import { leftPad } from "../util";
 
+/** Tree item representing a single clipboard history entry. */
 export class ClipHistoryItem extends vscode.TreeItem {
   constructor(readonly clip: IClipboardItem) {
     super(clip.value);
@@ -22,11 +29,9 @@ export class ClipHistoryItem extends vscode.TreeItem {
     if (this.clip.createdLocation) {
       this.resourceUri = this.clip.createdLocation.uri;
       this.contextValue += "file";
-
       this.tooltip = `File: ${this.resourceUri.fsPath}\nValue: ${this.tooltip}\n`;
     } else {
       const basePath = path.join(__filename, "..", "..", "..", "resources");
-
       this.iconPath = {
         light: path.join(basePath, "light", "string.svg"),
         dark: path.join(basePath, "dark", "string.svg"),
@@ -35,17 +40,21 @@ export class ClipHistoryItem extends vscode.TreeItem {
   }
 }
 
+/** Provides clipboard history items to the VS Code tree view. */
 export class ClipboardTreeDataProvider
-  implements vscode.TreeDataProvider<ClipHistoryItem>, vscode.Disposable {
+  implements vscode.TreeDataProvider<ClipHistoryItem>, vscode.Disposable
+{
   private _disposables: vscode.Disposable[] = [];
 
-  private _onDidChangeTreeData: vscode.EventEmitter<ClipHistoryItem | null> = new vscode.EventEmitter<ClipHistoryItem | null>();
-  public readonly onDidChangeTreeData: vscode.Event<ClipHistoryItem | null> = this
-    ._onDidChangeTreeData.event;
+  private _onDidChangeTreeData = new vscode.EventEmitter<
+    ClipHistoryItem | null
+  >();
+  public readonly onDidChangeTreeData: vscode.Event<ClipHistoryItem | null> =
+    this._onDidChangeTreeData.event;
 
   constructor(protected _manager: ClipboardManager) {
     this._manager.onDidChangeClipList(() => {
-      this._onDidChangeTreeData.fire();
+      this._onDidChangeTreeData.fire(null);
     });
   }
 
@@ -56,25 +65,22 @@ export class ClipboardTreeDataProvider
   }
 
   public getChildren(
-    _element?: ClipHistoryItem | undefined
+    _element?: ClipHistoryItem
   ): vscode.ProviderResult<ClipHistoryItem[]> {
     const clips = this._manager.clips;
-
     const maxLength = `${clips.length}`.length;
 
-    const childs = clips.map((c, index) => {
+    return clips.map((c, index) => {
       const item = new ClipHistoryItem(c);
       const indexNumber = leftPad(index + 1, maxLength, "0");
-
       item.label = `${indexNumber}) ${item.label}`;
-
       return item;
     });
-
-    return childs;
   }
 
-  public dispose() {
-    this._disposables.forEach(d => d.dispose());
+  public dispose(): void {
+    for (const d of this._disposables) {
+      d.dispose();
+    }
   }
 }

@@ -1,8 +1,16 @@
+/**
+ * Clipboard Manager - Remove Clipboard History command.
+ * Removes a specific item from clipboard history.
+ *
+ * @author Eno Yao
+ */
+
 import * as vscode from "vscode";
 import { ClipboardManager } from "../manager";
 import { ClipHistoryItem } from "../tree/history";
 import { commandList } from "./common";
 
+/** Command that removes a specific item from clipboard history. */
 export class RemoveClipboardHistory implements vscode.Disposable {
   private _disposable: vscode.Disposable[] = [];
 
@@ -16,16 +24,15 @@ export class RemoveClipboardHistory implements vscode.Disposable {
     );
   }
 
-  protected async execute(value: string | ClipHistoryItem) {
-    if (value instanceof ClipHistoryItem) {
-      value = value.clip.value;
-    }
-
-    // Update current clip in clipboard
-    await this._manager.removeClipboardValue(value);
+  protected async execute(value: string | ClipHistoryItem): Promise<void> {
+    const clipValue =
+      value instanceof ClipHistoryItem ? value.clip.value : value;
+    await this._manager.removeClipboardValue(clipValue);
   }
 
-  public dispose() {
-    this._disposable.forEach(d => d.dispose());
+  public dispose(): void {
+    for (const d of this._disposable) {
+      d.dispose();
+    }
   }
 }

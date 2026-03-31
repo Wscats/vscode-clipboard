@@ -1,8 +1,16 @@
+/**
+ * Clipboard Manager - VSCode Extension entry point.
+ * Registers commands, monitors clipboard changes, and manages history.
+ *
+ * @author Eno Yao
+ */
+
 "use strict";
 import * as vscode from "vscode";
 import { defaultClipboard } from "./clipboard";
 import { ApiGetMonitor } from "./commads/apiGetMonitor";
 import { ClearClipboardHistory } from "./commads/clearClipboardHistory";
+import { CopyToHistoryCommand } from "./commads/copyToHistory";
 import { HistoryTreeDoubleClickCommand } from "./commads/historyTreeDoubleClick";
 import { PickAndPasteCommand } from "./commads/pickAndPaste";
 import { RemoveClipboardHistory } from "./commads/removeClipboardHistory";
@@ -12,28 +20,30 @@ import { ClipboardCompletion } from "./completion";
 import { ClipboardManager } from "./manager";
 import { Monitor } from "./monitor";
 import { ClipboardTreeDataProvider } from "./tree/history";
-import { CopyToHistoryCommand } from "./commads/copyToHistory";
+import { getErrorMessage } from "./util";
 
 let manager: ClipboardManager;
 
-// this method is called when your extension is activated
-export async function activate(context: vscode.ExtensionContext) {
+/**
+ * Called when the extension is activated.
+ * Sets up clipboard monitoring, commands, tree view, and completion provider.
+ */
+export async function activate(
+  context: vscode.ExtensionContext
+): Promise<{ completion: ClipboardCompletion; manager: ClipboardManager } | undefined> {
   const disposable: vscode.Disposable[] = [];
 
   // Check the clipboard is working
   try {
-    await defaultClipboard.readText(); // Read test
-  } catch (error) {
+    await defaultClipboard.readText();
+  } catch (error: unknown) {
     console.log(error);
     // Small delay to force show error
     setTimeout(() => {
-      if (error.message) {
-        vscode.window.showErrorMessage(error.message);
-      } else {
-        vscode.window.showErrorMessage(
-          "Failed to read value from clipboard, check the console log"
-        );
-      }
+      const message = getErrorMessage(error);
+      vscode.window.showErrorMessage(
+        message || "Failed to read value from clipboard, check the console log"
+      );
     }, 2000);
     // Disable clipboard listening
     defaultClipboard.dispose();
@@ -62,24 +72,19 @@ export async function activate(context: vscode.ExtensionContext) {
   disposable.push(new CopyToHistoryCommand(monitor));
 
   const completion = new ClipboardCompletion(manager);
-  // disposable.push(completion);
 
-  // All files types
+  // Register completion provider for all file types
   disposable.push(
     vscode.languages.registerCompletionItemProvider(
-      {
-        scheme: "file",
-      },
+      { scheme: "file" },
       completion
     )
   );
 
-  // All files types (New file)
+  // Register completion provider for untitled (new) files
   disposable.push(
     vscode.languages.registerCompletionItemProvider(
-      {
-        scheme: "untitled",
-      },
+      { scheme: "untitled" },
       completion
     )
   );
@@ -94,7 +99,8 @@ export async function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  const updateConfig = () => {
+  // Configuration update handler
+  const updateConfig = (): void => {
     const config = vscode.workspace.getConfiguration("clipboard-manager");
     monitor.checkInterval = config.get("checkInterval", 500);
     monitor.onlyWindowFocused = config.get("onlyWindowFocused", true);
@@ -116,8 +122,11 @@ export async function activate(context: vscode.ExtensionContext) {
   };
 }
 
-// this method is called when your extension is deactivated
-export function deactivate() {
+/**
+ * Called when the extension is deactivated.
+ * Persists clipboard history to disk.
+ */
+export function deactivate(): void {
   if (manager) {
     manager.saveClips();
   }

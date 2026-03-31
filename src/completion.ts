@@ -1,8 +1,16 @@
+/**
+ * Clipboard Manager - Completion provider for clipboard snippets.
+ * Provides IntelliSense suggestions from clipboard history.
+ *
+ * @author Eno Yao
+ */
+
 import * as vscode from "vscode";
 import { commandList } from "./commads/common";
 import { ClipboardManager } from "./manager";
 import { leftPad } from "./util";
 
+/** Provides clipboard history items as completion suggestions. */
 export class ClipboardCompletion implements vscode.CompletionItemProvider {
   constructor(protected manager: ClipboardManager) {}
 
@@ -18,7 +26,6 @@ export class ClipboardCompletion implements vscode.CompletionItemProvider {
     );
 
     const enabled = config.get<boolean>("snippet.enabled", true);
-
     if (!enabled) {
       return null;
     }
@@ -33,11 +40,11 @@ export class ClipboardCompletion implements vscode.CompletionItemProvider {
 
     const maxLength = `${clips.length}`.length;
 
-    const completions: vscode.CompletionItem[] = clips.map((clip, index) => {
+    return clips.map((clip, index) => {
       // Add left zero pad from max number of clips
       const indexNumber = leftPad(index + 1, maxLength, "0");
 
-      const c: vscode.CompletionItem = {
+      const item: vscode.CompletionItem = {
         label: `${prefix}${indexNumber}`,
         detail: `Clipboard ${indexNumber}`,
         insertText: clip.value,
@@ -46,24 +53,23 @@ export class ClipboardCompletion implements vscode.CompletionItemProvider {
       };
 
       // Highlight the syntax of clip
-      c.documentation = new vscode.MarkdownString();
-      c.documentation.appendCodeblock(clip.value, clip.language);
+      const docs = new vscode.MarkdownString();
+      docs.appendCodeblock(clip.value, clip.language);
+      item.documentation = docs;
 
       if (clip.createdAt) {
         const date = new Date(clip.createdAt);
-        c.detail += " - " + date.toLocaleString();
+        item.detail += " - " + date.toLocaleString();
       }
 
-      c.command = {
+      item.command = {
         command: commandList.setClipboardValue,
         title: "Paste",
         tooltip: "Paste",
         arguments: [clip.value],
       };
 
-      return c;
+      return item;
     });
-
-    return completions;
   }
 }

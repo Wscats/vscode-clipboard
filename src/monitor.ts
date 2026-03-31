@@ -1,3 +1,10 @@
+/**
+ * Clipboard Manager - Clipboard change monitor.
+ * Polls the clipboard at a configurable interval and emits events on changes.
+ *
+ * @author Eno Yao
+ */
+
 import * as vscode from "vscode";
 import { BaseClipboard } from "./clipboard";
 import { toDisposable } from "./util";
@@ -21,21 +28,23 @@ export class Monitor implements vscode.Disposable {
   private _onDidChangeText = new vscode.EventEmitter<IClipboardTextChange>();
   public readonly onDidChangeText = this._onDidChangeText.event;
 
-  protected _timer: NodeJS.Timer | undefined;
+  protected _timer: ReturnType<typeof setInterval> | undefined;
 
   public maxClipboardSize: number = 1000000;
 
   protected _checkInterval: number = 500;
-  get checkInterval() {
+
+  get checkInterval(): number {
     return this._checkInterval;
   }
+
   set checkInterval(timeout: number) {
     this._checkInterval = timeout;
     if (this._timer) {
       clearInterval(this._timer);
       this._timer = undefined;
     }
-    // Minimum timeout to avoid cpu high usage
+    // Minimum timeout to avoid high CPU usage
     if (timeout >= 100) {
       this._timer = setInterval(() => this.checkChangeText(), timeout);
     }
@@ -45,10 +54,8 @@ export class Monitor implements vscode.Disposable {
     // Update current clipboard to check changes after init
     this.readText().then(value => {
       this._previousText = value;
-
       // Initialize the checkInterval
       this.checkInterval = this._checkInterval;
-
       return value;
     });
 
@@ -68,7 +75,7 @@ export class Monitor implements vscode.Disposable {
     );
 
     this._windowFocused = vscode.window.state.focused;
-    // Update current clip when window if focused again
+    // Update current clip when window is focused again
     vscode.window.onDidChangeWindowState(
       this.onDidChangeWindowState,
       this,
@@ -76,6 +83,7 @@ export class Monitor implements vscode.Disposable {
     );
   }
 
+  /** Read text from clipboard, returning empty string if it exceeds max size. */
   protected async readText(): Promise<string> {
     const text = await this.clipboard.readText();
     if (text.length > this.maxClipboardSize) {
@@ -84,17 +92,20 @@ export class Monitor implements vscode.Disposable {
     return text;
   }
 
-  protected async onDidChangeWindowState(state: vscode.WindowState) {
-    // Prevent detect change from external copy
+  /** Handle window focus state changes. */
+  protected async onDidChangeWindowState(
+    state: vscode.WindowState
+  ): Promise<void> {
+    // Prevent detecting changes from external copy
     if (this.onlyWindowFocused && state.focused) {
       this._previousText = await this.readText();
     }
-
     this._windowFocused = state.focused;
   }
 
-  public async checkChangeText() {
-    // Don't check the clipboard when windows is not focused
+  /** Check if clipboard text has changed and emit event if so. */
+  public async checkChangeText(): Promise<void> {
+    // Don't check the clipboard when window is not focused
     if (this.onlyWindowFocused && !this._windowFocused) {
       return;
     }
@@ -111,13 +122,13 @@ export class Monitor implements vscode.Disposable {
 
     const editor = vscode.window.activeTextEditor;
 
-    if (this._windowFocused && editor && editor.document) {
+    if (this._windowFocused && editor?.document) {
       // Set current language of copied clip
       change.language = editor.document.languageId;
 
-      // Try get position of clip
+      // Try to get position of clip
       if (editor.selection) {
-        const selection = editor.selection;
+        const { selection } = editor;
         change.location = {
           range: new vscode.Range(selection.start, selection.end),
           uri: editor.document.uri,
@@ -129,7 +140,9 @@ export class Monitor implements vscode.Disposable {
     this._previousText = newText;
   }
 
-  public dispose() {
-    this._disposables.forEach(d => d.dispose());
+  public dispose(): void {
+    for (const d of this._disposables) {
+      d.dispose();
+    }
   }
 }
